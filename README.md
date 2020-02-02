@@ -1,5 +1,9 @@
 # Maze Generator and Solver
 
+<p align="center">
+  <img width="460" height="300" src="maze.gif">
+</p>
+
 This repository is part of the [reciTAL](https://recital.ai/) technical
 interview process.
 
