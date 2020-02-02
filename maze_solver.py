@@ -53,6 +53,8 @@ class MazeSolver():
         Returns:
             list: path from entrance to exit.
         """
+        if not self.maze.is_valid(entrance):
+            return []
         visited = set()
         return self.shortest_path(entrance, visited)
 
