@@ -1,42 +1,52 @@
 #!/usr/bin/env python
 
-import os
 import time
+import random
 import subprocess as sp
 from cell import Cell
 
 class Maze():
+    """
+    This class represents a maze.
 
-    def __init__(self, length, width):
-        self._maze = self.generate_maze(length, width)
-        self._entrance = None
-        self._exit = None
+    Attributes:
+        maze (list): the maze itself.
+        _exit (tuple): exit coordenates.
+    """
+
+    def __init__(self, length: int, width: int):
+        """
+        The constructor for Maze class.
+
+        Parameters:
+            length (int): maze length.
+            width (int): maze width.
+        """
+        self._maze = Maze.generate_maze(length, width)
+        self._exit = self.build_exit()
 
     @property
-    def maze(self):
+    def maze(self) -> list:
+        """
+        Get the maze.
+
+        Returns:
+            list: the maze.
+        """
         return self._maze
 
     @property
-    def entrance(self):
-        return self._entrance
+    def exit(self) -> tuple:
+        """
+        Get the exit coordinates.
 
-    @property
-    def exit(self):
+        Returns:
+            tuple: exit coordinates.
+        """
         return self._exit
 
-    @entrance.setter
-    def entrance(self, entrance: tuple):
-        if self.is_valid(entrance):
-            self._entrance = entrance
-        raise Exception("Invalid entrance.")
-
-    @exit.setter
-    def exit(self, exit: tuple):
-        if self.is_valid(exit):
-            self._exit = exit
-        raise Exception("Invalid exit.")
-
-    def generate_maze(self, length: int, width: int) -> list:
+    @staticmethod
+    def generate_maze(length: int, width: int) -> list:
         """
         Generates a maze with every cell being a dead-end.
         With the parameters length = 3 and width = 3 we get:
@@ -58,16 +68,26 @@ class Maze():
                 maze[row][col] = Cell((row, col))
         return maze
 
-    def display(self, path: list = [(-1, -1)], delay: int = 0):
+    def display(self, path: list = None, delay: int = 2):
+        """
+        Displays the maze. If there's a path from the entrance to the exit
+        available, it creates an animation.
+
+        Parameters:
+            path (list, optional): path from entrance to exit.
+            delay (int, optional): time to refresh screen in seconds.
+        """
+        path = [(-1, -1)] if not path else path
         for pos in range(len(path)):
-            time.sleep(float(delay)/10)
-            sp.call('clear',shell=True)
+            Maze.clear_screen(delay)
             maze = [' _' * len(self.maze[0])]
             for row in range(len(self.maze)):
-                line = ' ' if self.is_passage((row, 0)) else '|'
+                line = '|'
                 for col in range(len(self.maze[row])):
                     if (row, col) in path[:pos+1]:
                         line += '■'
+                    elif (row, col) == self.exit:
+                        line += 'X'
                     else:
                         line += '_' if self.has_wall((row, col), Cell.directions['down']) else ' '
                     line += '|' if self.has_wall((row, col), Cell.directions['right']) else ' '
@@ -75,8 +95,17 @@ class Maze():
 
             for row in maze:
                 print(row)
-            print()
 
+    @staticmethod
+    def clear_screen(delay: int):
+        """
+        Clears the screen.
+
+        Parameters:
+            delay (int): time to refresh screen in seconds.
+        """
+        time.sleep(float(delay)/10)
+        sp.call('clear', shell=True)
 
     def has_wall(self, position: tuple, direction: list) -> bool:
         """
@@ -94,20 +123,6 @@ class Maze():
             return True
         return False
 
-    def is_passage(self, position: tuple) -> bool:
-        """
-        Check if the current position is a passage.
-
-        Parameters:
-            position (tuple): current position.
-
-        Returns:
-            bool: true if is a passage, otherwise false.
-        """
-        if position in [self.exit, self.entrance]:
-            return True
-        return False
-
     def is_valid(self, position: tuple) -> bool:
         """
         Check if the position is valid.
@@ -119,14 +134,36 @@ class Maze():
             bool: true if it's a valid position, otherwise false.
         """
         if 0 <= position[0] < len(self.maze) and 0 <= position[1] < len(self.maze[0]):
-           return True
+            return True
         return False
 
     def available_paths(self, position: tuple) -> list:
+        """
+        Creates a list with the possible cells to go from the current position.
+
+        Parameters:
+            position (tuple): current position.
+
+        Returns:
+            list: possible cells to from the current position.
+        """
         paths = []
         for direction in Cell.directions.values():
             next_cell = tuple([d + p for d, p in zip(direction, position)])
-            if self.is_valid(next_cell) and next_cell not in self.maze[position[0]][position[1]].walls:
+            if self.is_valid(next_cell) and \
+               next_cell not in self.maze[position[0]][position[1]].walls:
                 paths.append(next_cell)
         return paths
 
+    def build_exit(self) -> tuple:
+        """
+        Creates a random exit.
+
+        Returns:
+            tuple: random exit selected.
+        """
+        upper = [[0, v] for v in range(len(self.maze[0]))]
+        lower = [[len(self.maze) - 1, v] for v in range(len(self.maze[0]))]
+        right = [[v, 0] for v in range(len(self.maze))]
+        left = [[v, len(self.maze[0]) - 1] for v in range(len(self.maze))]
+        return tuple(random.choice(upper + lower + right + left)) # corners have more probability

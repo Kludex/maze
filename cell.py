@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 
 class Cell():
+    """
+    Cell class represents each position on the Maze.
+
+    Attributes:
+        _walls (set): walls around the cell.
+    """
     directions = {
         'right': (0, 1),
         'down': (1, 0),
@@ -9,13 +15,35 @@ class Cell():
     }
 
     @property
-    def walls(self):
+    def walls(self) -> set:
+        """
+        Gets the walls.
+
+        Returns:
+            set: walls around the cell.
+        """
         return self._walls
 
     def __init__(self, position: tuple):
-        self._walls = self.walls_from(position)
+        """
+        The constructor for Cell class.
 
-    def walls_from(self, position):
+        Parameters:
+            position (tuple): cell position.
+        """
+        self._walls = Cell.walls_from(position)
+
+    @staticmethod
+    def walls_from(position: tuple) -> set:
+        """
+        Gets the walls from position.
+
+        Parameters:
+            position (tuple): cell position.
+
+        Returns:
+            set: walls around the cell.
+        """
         walls = set()
         for direction in Cell.directions.values():
             wall = [d + p for d, p in zip(direction, position)]
@@ -23,10 +51,10 @@ class Cell():
         return walls
 
     def break_wall(self, direction: tuple):
-        self.walls.remove(direction)
+        """
+        Break wall in the specific direction.
 
-    def __str__(self):
-        s = []
-        for wall in self.walls:
-            s.append(str(wall))
-        return ' '.join(s)
+        Parameters:
+            direction (tuple): position to open a path.
+        """
+        self.walls.remove(direction)
