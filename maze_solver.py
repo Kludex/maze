@@ -1,64 +1,49 @@
+#!/usr/bin/env python
 
 from maze import Maze
 
-class MazeSolver(Maze):
-    """
-    A class responsable to find a path between the entrance and the exit on a Maze.
-    """
+class MazeSolver():
 
-    def __init__(self, maze):
-        self._maze = maze.maze
-        self._entrance = maze.entrance
-        self._exit = maze.exit
+    @property
+    def maze(self):
+        return self._maze
 
-        self.maze_path = self.solve_maze(maze)
+    @property
+    def path(self):
+        return self._path
 
-    def solve_maze(self, maze):
-        self.visit = [False] * (self.LENGTH * self.WIDTH)
-        entrance = self.matrix2int(maze.entrance) 
-        exit = self.matrix2int(maze.exit)
+    def __init__(self, maze: Maze, entrance: tuple, exit: tuple):
+        self._maze = maze
+        self._path = self.solve(entrance, exit)
+        print(self.path)
 
-        # return self.dfs(self.maze, entrance, exit)
-        return self.bfs(self.maze, entrance, exit)
+    def solve(self, entrance: tuple, exit: tuple) -> list:
+        visited = set()
+        return self.shortest_path(entrance, exit, visited)
 
-    def bfs(self, maze, cell, exit):
-        queue = [cell]
-        level = [-1] * (self.LENGTH * self.WIDTH)
-        level[cell] = 0
-        self.visit[cell] = True
+    def shortest_path(self, entrance: tuple, exit: tuple, visited: set) -> list:
+        queue = [entrance]
+        level = [[-1] * len(self.maze.maze[row]) for row in range(len(self.maze.maze))]
+        level[entrance[0]][entrance[1]] = 0
+        visited.add(entrance)
 
         while queue and ((cell := queue[0]) != exit):
             queue.pop(0)
-            for neighbor in maze[cell]:
-                if not self.visit[neighbor]:
-                    self.visit[neighbor] = True
-                    level[neighbor] = level[cell] + 1
+            for neighbor in self.maze.available_paths(cell):
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    level[neighbor[0]][neighbor[1]] = level[cell[0]][cell[1]] + 1
                     queue.append(neighbor)
 
         cell = exit
         path = []
-        while level[cell] > 0:
+        while level[cell[0]][cell[1]] > 0:
             path.append(cell)
-            for neighbor in maze[cell]:
-                if level[neighbor] + 1 == level[cell]:
+            for neighbor in self.maze.available_paths(cell):
+                if level[neighbor[0]][neighbor[1]] + 1 == level[cell[0]][cell[1]]:
                     cell = neighbor
         path.append(cell)
-        return path
+        return list(reversed(path))
 
-    # def dfs(self, maze, cell, exit):
-    #     self.visit[cell] = True 
-    #     if cell == exit:
-    #         return [cell]
-
-    #     for neighbor in maze[cell]:
-    #         if not self.visit[neighbor]:
-    #             path = self.dfs(maze, neighbor, exit)
-
-    #             if path is not None:
-    #                 path.append(cell)
-    #                 return path
-
-    #     return None
-
-    def show_path(self):
-        self.show(self.maze_path)
+    def display(self):
+        self.maze.display(self.path)

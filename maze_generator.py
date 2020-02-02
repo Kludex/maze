@@ -1,56 +1,37 @@
-import random
+#!/usr/bin/env python
+
 from maze import Maze
 
-class MazeGenerator(Maze):
-    """
-    A class responsable to generate a random Maze.
-    """
+class MazeGenerator():
 
-    def __init__(self):
-        self._entrance, self._exit = self.get_doors()
-        self._maze = self.generate_maze()
-    
-    def get_doors(self):
-        entrance = self.random_door() 
-        while (exit := self.random_door()) == entrance:
-            continue
-        return entrance, exit
+    @property
+    def maze(self):
+        return self._maze
 
-    def random_door(self):
-        return random.choice([[0, random.randint(1, self.WIDTH - 2)], 
-                              [self.LENGTH - 1, random.randint(1, self.WIDTH - 2)],
-                              [random.randint(1, self.LENGTH - 2), 0],
-                              [random.randint(1, self.LENGTH - 2), self.WIDTH - 1]])
+    def __init__(self, length=40, width=40):
+        self._maze = Maze(length, width)
+        self.randomize()
 
-    def generate_maze(self):
-        maze = self.initial_maze()
-        return self.dfs(maze)
-    
-    def dfs(self, maze):
-        dfs_tree = dict()
-        num_cells = self.LENGTH * self.WIDTH
-        for cell in range(num_cells):
-            dfs_tree[cell] = []
-        self.visit = [False] * (num_cells)
+    def randomize(self):
+        visited = set()
 
-        for cell in range(num_cells):
-            if not self.visit[cell]:
-                self.__dfs(maze, dfs_tree, cell)
+        for row in range(len(self.maze.maze)):
+            for col in range(len(self.maze.maze[row])):
+                self.dfs((row, col), visited)
 
-        return dfs_tree
+    # Remember to randomize chosen walls
+    def dfs(self, position: tuple, visited: set):
+        visited.add(position)
+        walls = self.maze.maze[position[0]][position[1]].walls.copy()
 
-    def __dfs(self, maze, dfs_tree, cell):
-        self.visit[cell] = True
+        for wall in walls:
+            if self.maze.is_valid(wall) and wall not in visited:
+                self.break_wall(position, wall)
+                self.dfs(tuple(wall), visited)
 
-        while self.has_unvisited(cell, maze):
-            random_neighbor = random.choice(maze[cell])
-            if not self.visit[random_neighbor]:
-                dfs_tree[cell].append(random_neighbor)
-                dfs_tree[random_neighbor].append(cell)
-                self.__dfs(maze, dfs_tree, random_neighbor)
-            
-    def has_unvisited(self, cell, maze):
-        for neighbor in maze[cell]:
-            if not self.visit[neighbor]:
-                return True
-        return False
+    def break_wall(self, cell1: tuple, cell2: tuple):
+        self.maze.maze[cell1[0]][cell1[1]].break_wall(cell2)
+        self.maze.maze[cell2[0]][cell2[1]].break_wall(cell1)
+
+    def display(self):
+        self.maze.display()
