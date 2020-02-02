@@ -38,9 +38,14 @@ conda env list
 
 ## Usage
 
-If you just want to **generate random mazes**, please run the command below with the coordinates for the entrance:
+If you just want to without choosing any entrance, please run the command:
 ```
-python . <x> <y>
+python .
+```
+
+Otherwise, if you want to choose the coordinates:
+```
+python . [x] [y]
 ```
 
 ## Collaborators

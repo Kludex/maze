@@ -53,6 +53,8 @@ class MazeSolver():
         Returns:
             list: path from entrance to exit.
         """
+        if len(entrance) == 0:
+            entrance = (0, 0)
         if not self.maze.is_valid(entrance):
             return []
         visited = set()
