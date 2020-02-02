@@ -38,16 +38,9 @@ conda env list
 
 ## Usage
 
-If you just want to **generate random mazes**, please:
+If you just want to **generate random mazes**, please run the command below with the coordinates for the entrance:
 ```
-python .
-```
-
-If you want to get the same mazes, you may want to generate a [seed
-state](https://en.wikipedia.org/wiki/Random_seed) to the *pseudorandom* maze
-generation process. 
-```
-python . [-d|--debug] <seed> 
+python . <x> <y>
 ```
 
 ## Collaborators
