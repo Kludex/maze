@@ -1,0 +1,14 @@
+language: python
+python:
+  - "3.8"
+install:
+  - pip install --upgrade pip
+  - pip install -r requirements.txt
+jobs:
+  include:
+    - stage: lint
+      script:
+        pylint *.py
+    # - stage: test
+    #   script:
+    #     python test_ls.py

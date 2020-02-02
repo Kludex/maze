@@ -1,56 +1,77 @@
+#!/usr/bin/env python
+
 import random
 from maze import Maze
 
-class MazeGenerator(Maze):
+class MazeGenerator():
     """
-    A class responsable to generate a random Maze.
+    This is a class responsable to generate random mazes.
+
+    Attributes:
+        _maze (Maze): the maze object.
     """
 
-    def __init__(self):
-        self._entrance, self._exit = self.get_doors()
-        self._maze = self.generate_maze()
-    
-    def get_doors(self):
-        entrance = self.random_door() 
-        while (exit := self.random_door()) == entrance:
-            continue
-        return entrance, exit
+    @property
+    def maze(self) -> Maze:
+        """
+        Gets the maze.
 
-    def random_door(self):
-        return random.choice([[0, random.randint(1, self.WIDTH - 2)], 
-                              [self.LENGTH - 1, random.randint(1, self.WIDTH - 2)],
-                              [random.randint(1, self.LENGTH - 2), 0],
-                              [random.randint(1, self.LENGTH - 2), self.WIDTH - 1]])
+        Returns:
+            Maze: the maze.
+        """
+        return self._maze
 
-    def generate_maze(self):
-        maze = self.initial_maze()
-        return self.dfs(maze)
-    
-    def dfs(self, maze):
-        dfs_tree = dict()
-        num_cells = self.LENGTH * self.WIDTH
-        for cell in range(num_cells):
-            dfs_tree[cell] = []
-        self.visit = [False] * (num_cells)
+    def __init__(self, length=30, width=40):
+        """
+        The constructor for MazeGenerator class.
 
-        for cell in range(num_cells):
-            if not self.visit[cell]:
-                self.__dfs(maze, dfs_tree, cell)
+        Parameters:
+            length (int, optional): maze length. Defaults to 30.
+            width (int, optional): maze width. Defaults to 40.
+        """
+        self._maze = Maze(length, width)
+        self.randomize()
 
-        return dfs_tree
+    def randomize(self):
+        """
+        Creates a maze breaking the walls between cells.
+        """
+        visited = set()
 
-    def __dfs(self, maze, dfs_tree, cell):
-        self.visit[cell] = True
+        for row in range(len(self.maze.maze)):
+            for col in range(len(self.maze.maze[row])):
+                self.dfs((row, col), visited)
 
-        while self.has_unvisited(cell, maze):
-            random_neighbor = random.choice(maze[cell])
-            if not self.visit[random_neighbor]:
-                dfs_tree[cell].append(random_neighbor)
-                dfs_tree[random_neighbor].append(cell)
-                self.__dfs(maze, dfs_tree, random_neighbor)
-            
-    def has_unvisited(self, cell, maze):
-        for neighbor in maze[cell]:
-            if not self.visit[neighbor]:
-                return True
-        return False
+    def dfs(self, position: tuple, visited: set):
+        """
+        A modified DFS that breaks walls if the cell was not visited yet.
+
+        Parameters:
+            position (tuple): current position.
+            visited (set): cells visited.
+        """
+        visited.add(position)
+        random_walls = list(self.maze.maze[position[0]][position[1]].walls.copy())
+        random.shuffle(random_walls)
+
+        for wall in random_walls:
+            if self.maze.is_valid(wall) and wall not in visited:
+                self.break_wall(position, wall)
+                self.dfs(tuple(wall), visited)
+
+    def break_wall(self, cell1: tuple, cell2: tuple):
+        """
+        Breaks wall from cell1 to cell2 and cell2 to cell1.
+
+        Parameters:
+            cell1 (tuple): current position.
+            cell2 (tuple): next position.
+        """
+        self.maze.maze[cell1[0]][cell1[1]].break_wall(cell2)
+        self.maze.maze[cell2[0]][cell2[1]].break_wall(cell1)
+
+    def display(self):
+        """
+        Wrapper to the Maze.display() method.
+        """
+        self.maze.display()

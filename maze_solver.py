@@ -1,64 +1,99 @@
+#!/usr/bin/env python
 
 from maze import Maze
 
-class MazeSolver(Maze):
+class MazeSolver():
     """
-    A class responsable to find a path between the entrance and the exit on a Maze.
+    This class solves a Maze.
+
+    Attributes:
+        _maze (Maze): the maze object.
+        _path (list): path from entrance to exit.
     """
 
-    def __init__(self, maze):
-        self._maze = maze.maze
-        self._entrance = maze.entrance
-        self._exit = maze.exit
+    @property
+    def maze(self) -> Maze:
+        """
+        Gets the maze.
 
-        self.maze_path = self.solve_maze(maze)
+        Returns:
+            Maze: the maze.
+        """
+        return self._maze
 
-    def solve_maze(self, maze):
-        self.visit = [False] * (self.LENGTH * self.WIDTH)
-        entrance = self.matrix2int(maze.entrance) 
-        exit = self.matrix2int(maze.exit)
+    @property
+    def path(self) -> list:
+        """
+        Gets the path.
 
-        # return self.dfs(self.maze, entrance, exit)
-        return self.bfs(self.maze, entrance, exit)
+        Returns:
+            list: path from entrance to exit.
+        """
+        return self._path
 
-    def bfs(self, maze, cell, exit):
-        queue = [cell]
-        level = [-1] * (self.LENGTH * self.WIDTH)
-        level[cell] = 0
-        self.visit[cell] = True
+    def __init__(self, maze: Maze, entrance: tuple):
+        """
+        The constructor for MazeSolver class.
 
-        while queue and ((cell := queue[0]) != exit):
+        Parameters:
+            maze (Maze): the maze.
+            entrance (tuple): entrance coordinates.
+        """
+        self._maze = maze
+        self._path = self.solve(entrance)
+
+    def solve(self, entrance: tuple) -> list:
+        """
+        Solves the maze finding the shortest path between the entrance and the
+        exit.
+
+        Parameters:
+            entrance (tuple): entrance coordinates.
+
+        Returns:
+            list: path from entrance to exit.
+        """
+        if not self.maze.is_valid(entrance):
+            return []
+        visited = set()
+        return self.shortest_path(entrance, visited)
+
+    def shortest_path(self, entrance: tuple, visited: set) -> list:
+        """
+        Finds the shortest path between the entrance and the maze exit.
+
+        Parameters:
+            entrance (tuple): entrance coordinates.
+            visited (set): cells visited.
+
+        Returns:
+            list: path from the entrance to exit.
+        """
+        queue = [entrance]
+        level = [[-1] * len(self.maze.maze[row]) for row in range(len(self.maze.maze))]
+        level[entrance[0]][entrance[1]] = 0
+        visited.add(entrance)
+
+        while queue and ((cell := queue[0]) != self.maze.exit):
             queue.pop(0)
-            for neighbor in maze[cell]:
-                if not self.visit[neighbor]:
-                    self.visit[neighbor] = True
-                    level[neighbor] = level[cell] + 1
+            for neighbor in self.maze.available_paths(cell):
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    level[neighbor[0]][neighbor[1]] = level[cell[0]][cell[1]] + 1
                     queue.append(neighbor)
 
-        cell = exit
+        cell = self.maze.exit
         path = []
-        while level[cell] > 0:
+        while level[cell[0]][cell[1]] > 0:
             path.append(cell)
-            for neighbor in maze[cell]:
-                if level[neighbor] + 1 == level[cell]:
+            for neighbor in self.maze.available_paths(cell):
+                if level[neighbor[0]][neighbor[1]] + 1 == level[cell[0]][cell[1]]:
                     cell = neighbor
         path.append(cell)
-        return path
+        return list(reversed(path))
 
-    # def dfs(self, maze, cell, exit):
-    #     self.visit[cell] = True 
-    #     if cell == exit:
-    #         return [cell]
-
-    #     for neighbor in maze[cell]:
-    #         if not self.visit[neighbor]:
-    #             path = self.dfs(maze, neighbor, exit)
-
-    #             if path is not None:
-    #                 path.append(cell)
-    #                 return path
-
-    #     return None
-
-    def show_path(self):
-        self.show(self.maze_path)
+    def display(self):
+        """
+        Wrapper to the Maze.display() method.
+        """
+        self.maze.display(self.path)
